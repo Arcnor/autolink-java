@@ -10,6 +10,8 @@ import org.nibor.autolink.LinkType;
  */
 public class UrlScanner implements Scanner {
 
+    public static final char TRIGGER = ':';
+
     @Override
     public LinkSpan scan(CharSequence input, int triggerIndex, int rewindIndex) {
         int length = input.length();

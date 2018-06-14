@@ -1,9 +1,6 @@
 package org.nibor.autolink;
 
-import org.nibor.autolink.internal.EmailScanner;
 import org.nibor.autolink.internal.Scanner;
-import org.nibor.autolink.internal.UrlScanner;
-import org.nibor.autolink.internal.WwwScanner;
 
 import java.util.*;
 
@@ -14,14 +11,10 @@ import java.util.*;
  */
 public class LinkExtractor {
 
-    private final Scanner urlScanner;
-    private final Scanner wwwScanner;
-    private final Scanner emailScanner;
+    private final Map<Character, Scanner> triggerToScanners;
 
-    private LinkExtractor(UrlScanner urlScanner, WwwScanner wwwScanner, EmailScanner emailScanner) {
-        this.urlScanner = urlScanner;
-        this.wwwScanner = wwwScanner;
-        this.emailScanner = emailScanner;
+    private LinkExtractor(Map<Character, Scanner> triggerToScanners) {
+        this.triggerToScanners = triggerToScanners;
     }
 
     public static Builder builder() {
@@ -43,48 +36,25 @@ public class LinkExtractor {
         };
     }
 
-    private Scanner trigger(char c) {
-        switch (c) {
-            case ':':
-                return urlScanner;
-            case '@':
-                return emailScanner;
-            case 'w':
-                return wwwScanner;
-        }
-        return null;
-    }
-
     /**
      * Builder for configuring link extractor.
      */
     public static class Builder {
 
-        private Set<LinkType> linkTypes = EnumSet.allOf(LinkType.class);
-        private boolean emailDomainMustHaveDot = true;
+        private Map<Character, Scanner> triggerToScanners = new HashMap<>();
 
         private Builder() {
         }
 
-        /**
-         * @param linkTypes the link types that should be extracted (by default, all types are extracted)
-         * @return this builder
-         */
-        public Builder linkTypes(Set<LinkType> linkTypes) {
-            if (linkTypes == null) {
-                throw new NullPointerException("linkTypes must not be null");
+        public Builder withScanner(char trigger, Scanner scanner) {
+            if (scanner == null) {
+                throw new NullPointerException("scanner should not be null");
             }
-            this.linkTypes = new HashSet<>(linkTypes);
-            return this;
-        }
+            if (triggerToScanners.containsKey(trigger)) {
+                throw new IllegalStateException("the trigger '" + trigger + "' has already been used for another scanner");
+            }
+            triggerToScanners.put(trigger, scanner);
 
-        /**
-         * @param emailDomainMustHaveDot true if the domain in an email address is required to have more than one part,
-         *                               false if it can also just have single part (e.g. foo@com); true by default
-         * @return this builder
-         */
-        public Builder emailDomainMustHaveDot(boolean emailDomainMustHaveDot) {
-            this.emailDomainMustHaveDot = emailDomainMustHaveDot;
             return this;
         }
 
@@ -92,10 +62,10 @@ public class LinkExtractor {
          * @return the configured link extractor
          */
         public LinkExtractor build() {
-            UrlScanner urlScanner = linkTypes.contains(LinkType.URL) ? new UrlScanner() : null;
-            WwwScanner wwwScanner = linkTypes.contains(LinkType.WWW) ? new WwwScanner() : null;
-            EmailScanner emailScanner = linkTypes.contains(LinkType.EMAIL) ? new EmailScanner(emailDomainMustHaveDot) : null;
-            return new LinkExtractor(urlScanner, wwwScanner, emailScanner);
+            if (triggerToScanners.isEmpty()) {
+                throw new IllegalStateException("no scanners have been defined");
+            }
+            return new LinkExtractor(triggerToScanners);
         }
     }
 
@@ -140,7 +110,7 @@ public class LinkExtractor {
 
             int length = input.length();
             while (index < length) {
-                Scanner scanner = trigger(input.charAt(index));
+                Scanner scanner = triggerToScanners.get(input.charAt(index));
                 if (scanner != null) {
                     LinkSpan link = scanner.scan(input, index, rewindIndex);
                     if (link != null) {

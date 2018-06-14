@@ -1,6 +1,9 @@
 package org.nibor.autolink;
 
 import org.junit.Test;
+import org.nibor.autolink.internal.EmailScanner;
+import org.nibor.autolink.internal.UrlScanner;
+import org.nibor.autolink.internal.WwwScanner;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -43,6 +46,10 @@ public class LinkExtractorIterableTest {
 
     private Iterable<LinkSpan> getSingleElementIterable() {
         String input = "foo http://example.com";
-        return LinkExtractor.builder().build().extractLinks(input);
+        return LinkExtractor.builder()
+                .withScanner(WwwScanner.TRIGGER, new WwwScanner())
+                .withScanner(EmailScanner.TRIGGER, new EmailScanner(true))
+                .withScanner(UrlScanner.TRIGGER, new UrlScanner())
+                .build().extractLinks(input);
     }
 }

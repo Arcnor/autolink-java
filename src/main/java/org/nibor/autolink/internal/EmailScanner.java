@@ -10,8 +10,15 @@ import org.nibor.autolink.LinkType;
  */
 public class EmailScanner implements Scanner {
 
+    public static final char TRIGGER = '@';
+
     private final boolean domainMustHaveDot;
 
+    /**
+     * @param domainMustHaveDot true if the domain in an email address is required to have more than one part,
+     *                          false if it can also just have single part (e.g. foo@com); true by default
+     * @return this builder
+     */
     public EmailScanner(boolean domainMustHaveDot) {
         this.domainMustHaveDot = domainMustHaveDot;
     }

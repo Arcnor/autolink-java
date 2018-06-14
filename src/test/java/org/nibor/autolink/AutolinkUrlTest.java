@@ -5,6 +5,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.nibor.autolink.internal.EmailScanner;
+import org.nibor.autolink.internal.UrlScanner;
+import org.nibor.autolink.internal.WwwScanner;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -17,8 +20,12 @@ public class AutolinkUrlTest extends AutolinkTestCase {
     @Parameters(name = "{1}")
     public static Iterable<Object[]> data() {
         return Arrays.asList(new Object[][]{
-                {LinkExtractor.builder().linkTypes(EnumSet.of(LinkType.URL)).build(), "URL"},
-                {LinkExtractor.builder().linkTypes(EnumSet.allOf(LinkType.class)).build(), "all"}
+                {LinkExtractor.builder().withScanner(UrlScanner.TRIGGER, new UrlScanner()).build(), "URL"},
+                {LinkExtractor.builder()
+                        .withScanner(WwwScanner.TRIGGER, new WwwScanner())
+                        .withScanner(EmailScanner.TRIGGER, new EmailScanner(true))
+                        .withScanner(UrlScanner.TRIGGER, new UrlScanner())
+                        .build(), "all"}
         });
     }
 

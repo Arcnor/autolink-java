@@ -11,6 +11,8 @@ import org.nibor.autolink.LinkType;
  */
 public class WwwScanner implements Scanner {
 
+    public static final char TRIGGER = 'w';
+
     @Override
     public LinkSpan scan(final CharSequence input, int triggerIndex, int rewindIndex) {
         final int afterDot = triggerIndex + 4;

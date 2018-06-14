@@ -5,6 +5,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.nibor.autolink.internal.EmailScanner;
+import org.nibor.autolink.internal.UrlScanner;
+import org.nibor.autolink.internal.WwwScanner;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -15,9 +18,17 @@ public class AutolinkEmailTest extends AutolinkTestCase {
     @Parameters(name = "{2}")
     public static Iterable<Object[]> data() {
         return Arrays.asList(new Object[][]{
-                {LinkExtractor.builder().linkTypes(EnumSet.of(LinkType.EMAIL)).build(), true, "email"},
-                {LinkExtractor.builder().linkTypes(EnumSet.allOf(LinkType.class)).build(), true, "all"},
-                {LinkExtractor.builder().emailDomainMustHaveDot(false).build(), false, "all, single part domain"}
+                {LinkExtractor.builder().withScanner(EmailScanner.TRIGGER, new EmailScanner(true)).build(), true, "email"},
+                {LinkExtractor.builder()
+                        .withScanner(WwwScanner.TRIGGER, new WwwScanner())
+                        .withScanner(EmailScanner.TRIGGER, new EmailScanner(true))
+                        .withScanner(UrlScanner.TRIGGER, new UrlScanner())
+                        .build(), true, "all"},
+                {LinkExtractor.builder()
+                        .withScanner(WwwScanner.TRIGGER, new WwwScanner())
+                        .withScanner(EmailScanner.TRIGGER, new EmailScanner(false))
+                        .withScanner(UrlScanner.TRIGGER, new UrlScanner())
+                        .build(), false, "all, single part domain"}
         });
     }
 
